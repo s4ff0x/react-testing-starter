@@ -9,9 +9,9 @@ const ExpandableText = ({ text }: { text: string }) => {
   return (
     <div>
       {isExpanded ? (
-        <article>{text}</article>
+        <article data-testid={"short"}>{text}</article>
       ) : (
-        <article>{text.substring(0, limit)}...</article>
+        <article data-testid={"long"}>{text.substring(0, limit)}...</article>
       )}
       <button onClick={() => setExpanded(!isExpanded)}>
         {isExpanded ? "Show Less" : "Show More"}
