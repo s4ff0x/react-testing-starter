@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-interface Props {
+export interface SearchBoxProps {
   onChange: (text: string) => void;
 }
 
-const SearchBox = ({ onChange }: Props) => {
+const SearchBox = ({ onChange }: SearchBoxProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (

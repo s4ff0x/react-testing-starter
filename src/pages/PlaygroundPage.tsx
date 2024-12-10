@@ -1,7 +1,7 @@
-import Onboarding from "../components/Onboarding";
+import OrderStatusSelector from "../components/OrderStatusSelector.tsx";
 
 const PlaygroundPage = () => {
-  return <Onboarding />;
+  return <OrderStatusSelector onChange={() => {}} />;
 };
 
 export default PlaygroundPage;
