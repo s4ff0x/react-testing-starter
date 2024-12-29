@@ -17,14 +17,16 @@ const ProductDetail = ({ productId }: { productId: number }) => {
       .then((res) => res.json())
       .then((data) => {
         console.log("00", data);
-        setProduct(data);
+        if (data.id) {
+          setProduct(data);
+        }
       })
       .catch((err) => {
         console.error("123");
         setError((err as Error).message);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [productId]);
 
   if (isLoading) return <div>Loading...</div>;
 

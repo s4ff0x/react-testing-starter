@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Data Submission to Make Webhook",
+    "description": "This API sends rowNumber and Mistake data to the specified Make webhook.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://hook.eu2.make.com"
+    }
+  ],
+  "paths": {
+    "/s7welqhbe7twf85lzilkak6a49y5yvay": {
+      "post": {
+        "summary": "Send Data to Make Webhook",
+        "operationId": "sendDataToWebhook",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rowNumber": {
+                    "type": "integer",
+                    "description": "The row number of the data entry."
+                  },
+                  "Mistake": {
+                    "type": "integer",
+                    "description": "The number of mistakes recorded for the row."
+                  }
+                },
+                "required": ["rowNumber", "Mistake"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Confirmation that the data has been successfully sent to the webhook.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Status of the data submission request."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Additional information about the submission status."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
