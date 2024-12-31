@@ -41,6 +41,8 @@ describe("Browse Products Page", () => {
       await screen.findByTestId("products-error");
     const getProductsData = async () =>
       await screen.findAllByTestId("products-data");
+    const getProductsNames = async () =>
+      await screen.findAllByTestId("product-name");
     const getCategoriesSkeleton = async () =>
       await screen.findByTestId("categories-skeleton");
     const getCategoriesError = async () =>
@@ -52,6 +54,29 @@ describe("Browse Products Page", () => {
 
     const user = userEvent.setup();
 
+    const clickCategoryTrigger = async () => {
+      const categoriesTrigger = await getCategoriesTrigger();
+      await user.click(categoriesTrigger);
+    };
+
+    const selectCategory = async (categoryName: string) => {
+      await clickCategoryTrigger();
+      const categoriesItems = await getCategoriesItems();
+      await user.click(
+        categoriesItems.find((el) => el.textContent === categoryName)!,
+      );
+    };
+
+    const expectProductsToBePresent = async (products: Product[]) => {
+      const productsData = await getProductsData();
+      const productsNames = await getProductsNames();
+      expect(productsData).toHaveLength(products.length);
+      productsNames.forEach((name) => {
+        expect(name).toBeInTheDocument();
+        expect(products.find((p) => p.name === name.textContent)).toBeDefined();
+      });
+    };
+
     return {
       getProductsSkeletons,
       getProductsError,
@@ -61,6 +86,9 @@ describe("Browse Products Page", () => {
       getCategoriesTrigger,
       getCategoriesItems,
       user,
+      clickCategoryTrigger,
+      selectCategory,
+      expectProductsToBePresent,
     };
   };
 
@@ -71,12 +99,14 @@ describe("Browse Products Page", () => {
     expect(productsSkeletons).not.toHaveLength(0);
     expect(await waitForElementToBeRemoved(productsSkeletons));
   });
+
   it("should render products error", async () => {
     errorCall("/products");
     const { getProductsError } = renderComponent();
     const error = await getProductsError();
     expect(error).toBeInTheDocument();
   });
+
   it("should render products data", async () => {
     const { getProductsData } = renderComponent();
     const data = await getProductsData();
@@ -90,21 +120,20 @@ describe("Browse Products Page", () => {
     expect(skeleton).toBeInTheDocument();
     expect(await waitForElementToBeRemoved(skeleton));
   });
+
   it("should render categories error", async () => {
     errorCall("/categories");
     const { getCategoriesError } = renderComponent();
     const error = await getCategoriesError();
     expect(error).toBeInTheDocument();
   });
-  it("should render categories data", async () => {
-    const { getCategoriesTrigger, getCategoriesItems, user } =
-      renderComponent();
-    const categoriesTrigger = await getCategoriesTrigger();
 
-    await user.click(categoriesTrigger);
+  it("should show all options in category filter (including all)", async () => {
+    const { getCategoriesItems, clickCategoryTrigger } = renderComponent();
+
+    await clickCategoryTrigger();
 
     const categoriesItems = await getCategoriesItems();
-
     expect(categoriesItems).toHaveLength(4);
     expect(categoriesItems[0]).toHaveTextContent(/all/i);
     for (let i = 1; i < categoriesItems.length; i++) {
@@ -112,35 +141,22 @@ describe("Browse Products Page", () => {
     }
   });
 
-  it("should filter by category", async () => {
-    const { getCategoriesTrigger, getCategoriesItems, getProductsData, user } =
-      renderComponent();
-
-    const categoriesTrigger = await getCategoriesTrigger();
-    await user.click(categoriesTrigger);
-
-    let categoriesItems = await getCategoriesItems();
-
-    expect(categoriesItems).toHaveLength(4);
-
-    expect(categoriesItems[0]).toHaveTextContent(/all/i);
-
-    for (let i = 1; i < categoriesItems.length; i++) {
-      expect(categoriesItems[i]).toHaveTextContent(categories[i - 1].name);
-    }
+  it("should show correct data for selected category", async () => {
+    const { selectCategory, expectProductsToBePresent } = renderComponent();
 
     const selectedCategory = categories[0];
-    await user.click(
-      categoriesItems.find((el) => el.textContent === selectedCategory.name)!,
-    );
+    await selectCategory(selectedCategory.name);
+
     const products = db.product.findMany({
       where: { categoryId: { equals: selectedCategory.id } },
     });
-    expect(await getProductsData()).toHaveLength(products.length);
 
-    await user.click(categoriesTrigger);
-    await user.click((await getCategoriesItems())[0]);
+    await expectProductsToBePresent(products);
+  });
 
-    expect(await getProductsData()).toHaveLength(6);
+  it("should show all products", async () => {
+    const { selectCategory, expectProductsToBePresent } = renderComponent();
+    await selectCategory("All");
+    await expectProductsToBePresent(products);
   });
 });

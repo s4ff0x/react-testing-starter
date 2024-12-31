@@ -118,7 +118,9 @@ function BrowseProducts() {
           {!isProductsLoading &&
             visibleProducts.map((product) => (
               <Table.Row key={product.id} data-testid="products-data">
-                <Table.Cell>{product.name}</Table.Cell>
+                <Table.Cell data-testid="product-name">
+                  {product.name}
+                </Table.Cell>
                 <Table.Cell>${product.price}</Table.Cell>
                 <Table.Cell>
                   <QuantitySelector product={product} />
