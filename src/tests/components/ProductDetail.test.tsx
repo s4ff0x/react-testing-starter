@@ -4,6 +4,7 @@ import { db } from "../mocks/db.ts";
 import { Product } from "../../entities.ts";
 import { server } from "../mocks/server.ts";
 import { http, HttpResponse } from "msw";
+import { AllProviders } from "../all-providers.tsx";
 
 describe("Product Detail", () => {
   const products: Product[] = [];
@@ -19,20 +20,22 @@ describe("Product Detail", () => {
   });
 
   it("should render product detail", async () => {
-    render(<ProductDetail productId={products[0].id} />);
+    render(<ProductDetail productId={products[0].id} />, {
+      wrapper: AllProviders,
+    });
 
     const name = await screen.findByText(`Name: ${products[0].name}`);
     expect(name).toBeInTheDocument();
   });
   it("should render product not found", async () => {
-    render(<ProductDetail productId={1000} />);
+    render(<ProductDetail productId={1000} />, { wrapper: AllProviders });
 
     expect(await screen.findByTestId("not-found")).toBeInTheDocument();
   });
 
   it("should render error", async () => {
     server.use(http.get("/products/:id", HttpResponse.error));
-    render(<ProductDetail productId={0} />);
+    render(<ProductDetail />, { wrapper: AllProviders });
 
     expect(await screen.findByTestId("error")).toBeInTheDocument();
   });
