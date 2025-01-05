@@ -8,6 +8,9 @@ import { AllProviders } from "../all-providers.tsx";
 import { db } from "../mocks/db.ts";
 import { Category, Product } from "../../entities.ts";
 import { userEvent } from "@testing-library/user-event";
+import { ProductFormData } from "../../validationSchemas/productSchema.ts";
+import { expect } from "vitest";
+import { Toaster } from "react-hot-toast";
 
 describe("Product Detail", () => {
   let category: Category;
@@ -23,10 +26,19 @@ describe("Product Detail", () => {
     db.category.delete({ where: { id: { equals: category.id } } });
   });
 
-  const renderComponent = async (product?: Product) => {
-    render(<ProductForm onSubmit={vi.fn()} product={product} />, {
-      wrapper: AllProviders,
-    });
+  const renderComponent = async (
+    product?: Product,
+    onChange?: (product: ProductFormData) => Promise<void>,
+  ) => {
+    render(
+      <>
+        <Toaster />
+        <ProductForm onSubmit={onChange ?? vi.fn()} product={product} />
+      </>,
+      {
+        wrapper: AllProviders,
+      },
+    );
 
     const user = userEvent.setup();
 
@@ -183,5 +195,58 @@ describe("Product Detail", () => {
     await waitFormToLoad();
     await fillAndSubmitForm({ ...validFormValues, categoryIdx: undefined });
     await checkError(RegExp(error));
+  });
+
+  it("should submit form", async () => {
+    const onSubmit = vi.fn();
+    const { waitFormToLoad, fillAndSubmitForm, validFormValues } =
+      await renderComponent(undefined, onSubmit);
+    await waitFormToLoad();
+    await fillAndSubmitForm({ ...validFormValues });
+    expect(onSubmit).toBeCalledWith({
+      name: validFormValues.name,
+      price: +validFormValues.price,
+      categoryId: category.id,
+    });
+  });
+
+  it("should submit form with error", async () => {
+    const onSubmit = vi.fn();
+    const { waitFormToLoad, fillAndSubmitForm, validFormValues } =
+      await renderComponent(undefined, onSubmit);
+    await waitFormToLoad();
+    onSubmit.mockRejectedValue("An unexpected error occurred");
+    await fillAndSubmitForm({ ...validFormValues });
+    expect(screen.getByRole("status")).toHaveTextContent(/error/i);
+  });
+
+  it("should disable button when submitting", async () => {
+    const onSubmit = vi.fn();
+    onSubmit.mockReturnValue(new Promise(() => {}));
+    const { waitFormToLoad, fillAndSubmitForm, validFormValues } =
+      await renderComponent(undefined, onSubmit);
+    await waitFormToLoad();
+    await fillAndSubmitForm({ ...validFormValues });
+    expect(screen.getByRole("button")).toBeDisabled();
+  });
+
+  it("should enable button after submit", async () => {
+    const onSubmit = vi.fn();
+    onSubmit.mockResolvedValue(undefined);
+    const { waitFormToLoad, fillAndSubmitForm, validFormValues } =
+      await renderComponent(undefined, onSubmit);
+    await waitFormToLoad();
+    await fillAndSubmitForm({ ...validFormValues });
+    expect(screen.getByRole("button")).not.toBeDisabled();
+  });
+
+  it("should enable button if error on submit", async () => {
+    const onSubmit = vi.fn();
+    onSubmit.mockRejectedValue("An unexpected error occurred");
+    const { waitFormToLoad, fillAndSubmitForm, validFormValues } =
+      await renderComponent(undefined, onSubmit);
+    await waitFormToLoad();
+    await fillAndSubmitForm({ ...validFormValues });
+    expect(screen.getByRole("button")).not.toBeDisabled();
   });
 });
