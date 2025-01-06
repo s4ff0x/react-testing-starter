@@ -4,11 +4,10 @@ import useProduct from "../hooks/useProduct";
 const ProductDetailPage = () => {
   const params = useParams();
   const productId = parseInt(params.id!);
-  const { data: product, isLoading, error } = useProduct(productId);
+  const { data: product, isLoading, error, isError } = useProduct(productId);
 
+  if (isError) return <div>Error: {error.message}</div>;
   if (isLoading) return <div>Loading...</div>;
-
-  if (error) return <div>Error: {error.message}</div>;
 
   if (!product) return <div>The given product was not found.</div>;
 
